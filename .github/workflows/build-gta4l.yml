@@ -37,12 +37,12 @@ jobs:
             build-essential uuid-dev clang llvm iasl nasm gcc-aarch64-linux-gnu abootimg \
             python3-pil python3-git gettext libgcc-s1:i386 libstdc++6:i386 -y
 
-      # DEBUG + UART: print bring-up logs to ttyMSM0 @ 0x4a90000 (read via EUD over USB-C)
-      - name: Build gta4l (DEBUG, UART, installer zip)
+      # DEBUG WITHOUT --uart: SerialPortLib = FrameBufferSerialPortLib, so the
+      # entire UEFI boot log renders ON THE TABLET SCREEN (no EUD/serial needed).
+      - name: Build gta4l (DEBUG, on-screen console, installer zip)
         run: |
           ./build.sh --device gta4l \
             --release ${{ github.event.inputs.mode || 'DEBUG' }} \
-            --uart \
             --installer-zip
 
       - name: Upload UEFI image + installer
