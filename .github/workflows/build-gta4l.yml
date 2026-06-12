@@ -45,12 +45,20 @@ jobs:
             --release ${{ github.event.inputs.mode || 'DEBUG' }} \
             --installer-zip
 
-      # The Samsung Bengal ABL refuses to launch a boot image without a valid
-      # AVB (Android Verified Boot) footer, even when the bootloader is
-      # unlocked (the stock/LineageOS images all carry one). Add an unsigned
-      # hash footer with the official AOSP avbtool, sized to the real boot
-      # partition (100663296 bytes = 96 MiB), and pad so the AVBf footer lands
-      # in the last 64 bytes of the partition where the ABL looks for it.
+      # PROVEN by the modified-recovery-kernel test: the Samsung Bengal ABL
+      # cryptographically verifies the boot image and refuses to launch it if
+      # the content does not match a valid AVB (Android Verified Boot) footer -
+      # changing 16 bytes of a genuine recovery kernel got it rejected. The
+      # vbmeta partition's VERIFICATION_DISABLED flag only covers the
+      # system/vendor chain; boot/recovery carry their own self-vbmeta footer
+      # which the bootloader checks for integrity (the signature key is not
+      # enforced while unlocked, so an unsigned hash footer is accepted).
+      #
+      # Add an unsigned hash footer with the official AOSP avbtool, then force
+      # the image to the full 96 MiB partition size with the 64-byte AVBf
+      # footer in the very last bytes (where the ABL reads it), matching the
+      # stock recovery layout. We dd-flash full-size so the footer lands at
+      # partition_end-64.
       - name: Add AVB hash footer (boot partition = 96 MiB)
         run: |
           curl -s "https://android.googlesource.com/platform/external/avb/+/refs/heads/master/avbtool.py?format=TEXT" \
@@ -58,15 +66,27 @@ jobs:
           chmod +x avbtool
           python3 avbtool version
           PSIZE=100663296
-          for img in boot-gta4l.img; do
-            [ -f "$img" ] || continue
-            python3 avbtool add_hash_footer \
-              --image "$img" \
-              --partition_name boot \
-              --partition_size "$PSIZE"
-            echo "After footer: $(stat -c%s "$img") bytes"
-            python3 avbtool info_image --image "$img" | head -30
-          done
+          img=boot-gta4l.img
+          python3 avbtool add_hash_footer \
+            --image "$img" \
+            --partition_name boot \
+            --partition_size "$PSIZE"
+          echo "avbtool output size: $(stat -c%s "$img")"
+          python3 avbtool info_image --image "$img" | head -40
+          # Re-lay out to a full partition_size image: keep the vbmeta where
+          # avbtool put it, zero-pad, and place the AVBf footer in the last 64B.
+          python3 - "$img" "$PSIZE" <<'PY'
+          import sys
+          path, P = sys.argv[1], int(sys.argv[2])
+          d = open(path,'rb').read()
+          assert d[-64:].startswith(b'AVBf'), "no AVBf footer at end of avbtool output"
+          footer = d[-64:]
+          body = d[:-64]
+          assert len(body) <= P-64, f"image too big for partition: {len(body)} > {P-64}"
+          out = body + b'\x00'*(P-64-len(body)) + footer
+          open(path,'wb').write(out)
+          print(f"final full-partition image: {len(out)} bytes, AVBf at {len(out)-64:#x}")
+          PY
 
       - name: Upload UEFI image + installer
         uses: actions/upload-artifact@v4
