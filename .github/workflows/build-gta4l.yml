@@ -65,12 +65,20 @@ jobs:
             | base64 -d > avbtool
           chmod +x avbtool
           python3 avbtool version
+          # A bare (unsigned, Algorithm NONE) hash footer was NOT enough - the
+          # ABL needs a SIGNED footer (recovery's is SHA256_RSA4096). While
+          # unlocked the key is not enforced against the OEM root, so a freshly
+          # generated self-signed RSA-4096 key is accepted (same as how
+          # LineageOS boots with its own AVB key). Generate one and sign.
+          openssl genrsa -out avb_key.pem 4096
           PSIZE=100663296
           img=boot-gta4l.img
           python3 avbtool add_hash_footer \
             --image "$img" \
             --partition_name boot \
-            --partition_size "$PSIZE"
+            --partition_size "$PSIZE" \
+            --algorithm SHA256_RSA4096 \
+            --key avb_key.pem
           echo "avbtool output size: $(stat -c%s "$img")"
           python3 avbtool info_image --image "$img" | head -40
           # Re-lay out to a full partition_size image: keep the vbmeta where
