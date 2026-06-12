@@ -65,12 +65,17 @@ jobs:
             | base64 -d > avbtool
           chmod +x avbtool
           python3 avbtool version
-          # A bare (unsigned, Algorithm NONE) hash footer was NOT enough - the
-          # ABL needs a SIGNED footer (recovery's is SHA256_RSA4096). While
-          # unlocked the key is not enforced against the OEM root, so a freshly
-          # generated self-signed RSA-4096 key is accepted (same as how
-          # LineageOS boots with its own AVB key). Generate one and sign.
-          openssl genrsa -out avb_key.pem 4096
+          # The bootloader verifies boot against an embedded vbmeta footer
+          # SIGNED with a SPECIFIC trusted key - the device's vbmeta partition
+          # and recovery both carry the same AVB public key (sha1 2597c218...).
+          # A self-generated key (build #19) was rejected. Unofficial LineageOS
+          # signs with the AOSP test key, so fetch it, confirm its AVB pubkey
+          # sha1 matches the device's, and sign with it.
+          curl -s "https://android.googlesource.com/platform/external/avb/+/refs/heads/master/test/data/testkey_rsa4096.pem?format=TEXT" \
+            | base64 -d > testkey_rsa4096.pem
+          python3 avbtool extract_public_key --key testkey_rsa4096.pem --output testkey.avbpubkey
+          echo "AOSP testkey AVB pubkey sha1: $(sha1sum testkey.avbpubkey | cut -d' ' -f1)"
+          echo "Device AVB pubkey sha1 (target): 2597c218aae470a1...  (full sha1 below for compare)"
           PSIZE=100663296
           img=boot-gta4l.img
           python3 avbtool add_hash_footer \
@@ -78,7 +83,7 @@ jobs:
             --partition_name boot \
             --partition_size "$PSIZE" \
             --algorithm SHA256_RSA4096 \
-            --key avb_key.pem
+            --key testkey_rsa4096.pem
           echo "avbtool output size: $(stat -c%s "$img")"
           python3 avbtool info_image --image "$img" | head -40
           # Re-lay out to a full partition_size image: keep the vbmeta where
