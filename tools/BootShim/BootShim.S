@@ -44,6 +44,21 @@ _StackSize:
 	.quad UEFI_SIZE
 
 _Start:
+	/* ---- DIAGNOSTIC: prove the ABL actually launches us by painting the
+	   continuous-splash framebuffer @ 0x5C000000 before doing anything.
+	   MMU is off here, so this is a direct physical write. If the screen
+	   changes, BootShim ran; if it stays the Samsung splash, the ABL never
+	   transferred control to our kernel. x1 (payload ptr) is preserved. ---- */
+	movz	x10, #0x5C00, lsl #16     /* x10 = 0x5C000000 framebuffer base */
+	movz	x11, #0x07E0
+	movk	x11, #0x07E0, lsl #16     /* x11 = 0x07E007E0 (RGB565 green x2) */
+	movz	x12, #0x0080, lsl #16     /* x12 = 0x00800000 = 8 MiB to fill */
+_PaintLoop:
+	str	w11, [x10], #4
+	subs	x12, x12, #4
+	b.ne	_PaintLoop
+	/* ---- end diagnostic ---- */
+
 	mov	x4, x1
 	ldr	x5, _StackBase
 	cmp	x4, x5
