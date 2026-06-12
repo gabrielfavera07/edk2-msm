@@ -45,6 +45,29 @@ jobs:
             --release ${{ github.event.inputs.mode || 'DEBUG' }} \
             --installer-zip
 
+      # The Samsung Bengal ABL refuses to launch a boot image without a valid
+      # AVB (Android Verified Boot) footer, even when the bootloader is
+      # unlocked (the stock/LineageOS images all carry one). Add an unsigned
+      # hash footer with the official AOSP avbtool, sized to the real boot
+      # partition (100663296 bytes = 96 MiB), and pad so the AVBf footer lands
+      # in the last 64 bytes of the partition where the ABL looks for it.
+      - name: Add AVB hash footer (boot partition = 96 MiB)
+        run: |
+          curl -s "https://android.googlesource.com/platform/external/avb/+/refs/heads/master/avbtool.py?format=TEXT" \
+            | base64 -d > avbtool
+          chmod +x avbtool
+          python3 avbtool version
+          PSIZE=100663296
+          for img in boot-gta4l.img; do
+            [ -f "$img" ] || continue
+            python3 avbtool add_hash_footer \
+              --image "$img" \
+              --partition_name boot \
+              --partition_size "$PSIZE"
+            echo "After footer: $(stat -c%s "$img") bytes"
+            python3 avbtool info_image --image "$img" | head -30
+          done
+
       - name: Upload UEFI image + installer
         uses: actions/upload-artifact@v4
         with:
