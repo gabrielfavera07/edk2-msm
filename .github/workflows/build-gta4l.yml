@@ -1,0 +1,54 @@
+name: Build UEFI - Galaxy Tab A7 (gta4l / SM6115 Bengal)
+
+on:
+  push:
+    branches: [gta4l, master]
+    paths:
+      - 'Platform/Samsung/sm6225/**'
+      - 'configs/devices/gta4l.conf'
+      - '.github/workflows/build-gta4l.yml'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Build mode'
+        default: 'DEBUG'
+        type: choice
+        options: [DEBUG, RELEASE]
+
+jobs:
+  build:
+    name: Build gta4l UEFI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install required packages
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo install -d -m 0755 /etc/apt/keyrings
+          sudo wget -O /etc/apt/keyrings/winehq-archive.key \
+            https://dl.winehq.org/wine-builds/winehq.key
+          sudo chmod 644 /etc/apt/keyrings/winehq-archive.key
+          sudo wget -O /etc/apt/sources.list.d/winehq-noble.sources \
+            https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources
+          sudo apt-get update
+          sudo apt-get install --install-recommends winehq-stable libsdl2-2.0-0 libsdl2-dev \
+            build-essential uuid-dev clang llvm iasl nasm gcc-aarch64-linux-gnu abootimg \
+            python3-pil python3-git gettext libgcc-s1:i386 libstdc++6:i386 -y
+
+      # DEBUG + UART: print bring-up logs to ttyMSM0 @ 0x4a90000 (read via EUD over USB-C)
+      - name: Build gta4l (DEBUG, UART, installer zip)
+        run: |
+          ./build.sh --device gta4l \
+            --release ${{ github.event.inputs.mode || 'DEBUG' }} \
+            --uart \
+            --installer-zip
+
+      - name: Upload UEFI image + installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta4l-uefi
+          path: |
+            ./*.img
+            ./uefi-installer-*.zip
