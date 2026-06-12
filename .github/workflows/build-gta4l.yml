@@ -14,6 +14,10 @@ on:
         default: 'DEBUG'
         type: choice
         options: [DEBUG, RELEASE]
+      uart:
+        description: 'Route EDK2 log to UART 0x4a90000 (read via Samsung USB-C UART jig)'
+        default: false
+        type: boolean
 
 jobs:
   build:
@@ -43,6 +47,7 @@ jobs:
         run: |
           ./build.sh --device gta4l \
             --release ${{ github.event.inputs.mode || 'DEBUG' }} \
+            ${{ github.event.inputs.uart == 'true' && '--uart' || '' }} \
             --installer-zip
 
       # PROVEN by the modified-recovery-kernel test: the Samsung Bengal ABL
