@@ -82,6 +82,7 @@ jobs:
             --image "$img" \
             --partition_name boot \
             --partition_size "$PSIZE" \
+            --rollback_index 1 \
             --algorithm SHA256_RSA4096 \
             --key testkey_rsa4096.pem
           echo "avbtool output size: $(stat -c%s "$img")"
@@ -100,6 +101,24 @@ jobs:
           open(path,'wb').write(out)
           print(f"final full-partition image: {len(out)} bytes, AVBf at {len(out)-64:#x}")
           PY
+
+          # The real gate: the ABL verifies boot against the vbmeta PARTITION's
+          # boot hash descriptor (the stock LineageOS boot hash), NOT boot's own
+          # footer. Regenerate the vbmeta partition with OUR boot's descriptor,
+          # signed with the same trusted AOSP test key, verification disabled
+          # for the rest, padded to the 64 KiB vbmeta partition. Flash this
+          # alongside boot. Recovery keeps its own embedded vbmeta so it stays
+          # bootable as our flashing lifeline.
+          python3 avbtool make_vbmeta_image \
+            --output vbmeta-gta4l.img \
+            --algorithm SHA256_RSA4096 \
+            --key testkey_rsa4096.pem \
+            --include_descriptors_from_image boot-gta4l.img \
+            --rollback_index 1 \
+            --flags 2 \
+            --padding_size 65536
+          echo "vbmeta-gta4l.img: $(stat -c%s vbmeta-gta4l.img) bytes"
+          python3 avbtool info_image --image vbmeta-gta4l.img | head -40
 
       - name: Upload UEFI image + installer
         uses: actions/upload-artifact@v4
