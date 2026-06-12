@@ -13,10 +13,12 @@ function platform_build_bootimg(){
 		python3 "${ROOTDIR}/tools/mkbootimg.py" \
 		--kernel "${WORKSPACE}/uefi-${DEVICE}-kernel" \
 		--ramdisk ramdisk \
+		--dtb "${ROOTDIR}/Platform/Samsung/sm6225/FdtBlob_compat/gta4l.dtb" \
 		--base 0x00000000 \
 		--kernel_offset 0x00008000 \
 		--ramdisk_offset 0x20000000 \
 		--tags_offset 0x01e00000 \
+		--dtb_offset 0x01f00000 \
 		--pagesize 4096 \
 		--os_version "${BOOTIMG_OS_VERSION}" \
 		--os_patch_level "${BOOTIMG_OS_PATCH_LEVEL}" \
