@@ -11,10 +11,15 @@
   FLASH_DEFINITION               = Platform/Qualcomm/sm6225/sm6225.fdf
   DEVICE_DXE_FV_COMPONENTS       = Platform/Samsung/sm6225/gta4l.fdf.inc
 
-  # SM-T500 bootchain carries slot suffixes (boot_a/boot_b)
-  AB_SLOTS_SUPPORT               = TRUE
+  # SM-T500 is A-only (partitions are xblbak/xbl, not xbl_a/xbl_b)
+  AB_SLOTS_SUPPORT               = FALSE
 
 !include Platform/Qualcomm/sm6225/sm6225.dsc
+
+# Device-specific 3 GB memory map (overrides the generic 4 GB sm6225 one;
+# last assignment of a library class wins in EDK2)
+[LibraryClasses.common]
+  PlatformMemoryMapLib|Platform/Samsung/sm6225/Library/gta4l/PlatformMemoryMapLib/PlatformMemoryMapLib.inf
 
 [BuildOptions.common]
   GCC:*_*_AARCH64_CC_FLAGS = -DENABLE_SIMPLE_INIT
