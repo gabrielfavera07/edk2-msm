@@ -27,7 +27,10 @@ static ARM_MEMORY_REGION_DESCRIPTOR_EX gDeviceMemoryDescriptorEx[] = {
   {"RAM Partition",         0x46200000, 0x04900000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
   /* modem 0x4AB00000 + video/wlan/cdsp/adsp/ipa/gpu PIL chain, ends 0x55617000 */
   {"PIL Reserved",          0x4AB00000, 0x0AB17000, AddMem, MEM_RES, WRITE_COMBINEABLE,   Reserv, UNCACHED_UNBUFFERED_XN},
-  {"RAM Partition",         0x55617000, 0x069E9000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
+  {"RAM Partition",         0x55617000, 0x029E9000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
+  /* UEFI FD runs HERE (low sandbox, executable) - FD_BASE 0x58000000, 7 MB */
+  {"UEFI FD",               0x58000000, 0x00700000, AddMem, SYS_MEM, SYS_MEM_CAP, BsData, WRITE_BACK},
+  {"RAM Partition",         0x58700000, 0x03900000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
   /* cont_splash_region@5c000000 - the live framebuffer */
   {"Display Reserved",      0x5C000000, 0x00F00000, AddMem, MEM_RES, SYS_MEM_CAP, Reserv, WRITE_THROUGH_XN},
   {"DFPS Data",             0x5CF00000, 0x00100000, AddMem, MEM_RES, WRITE_COMBINEABLE,   Reserv, UNCACHED_UNBUFFERED_XN},
@@ -49,10 +52,8 @@ static ARM_MEMORY_REGION_DESCRIPTOR_EX gDeviceMemoryDescriptorEx[] = {
   /* hole 0x7E580000 - 0x80000000: NOT mapped (no DRAM there) */
 
 /*--------------------- DDR Banks 1+2: 0x80000000 - 0x100000000 (2 GB) ---------------------*/
-  {"RAM Partition",         0x80000000, 0x4E000000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
-  /* UEFI firmware volume itself (FD_BASE/FD_SIZE from configs/sm6225.conf) */
-  {"UEFI FD",               0xCE000000, 0x00700000, AddMem, SYS_MEM, SYS_MEM_CAP, BsData, WRITE_BACK},
-  {"RAM Partition",         0xCE700000, 0x31900000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
+  /* FD no longer lives up here - now in the low sandbox at 0x58000000 */
+  {"RAM Partition",         0x80000000, 0x80000000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
 
 /*--------------------- Other ---------------------*/
   {"RPM_SS_MSG_RAM",        0x045F0000, 0x00007000, NoHob,  MMAP_IO, INITIALIZED, Conv,   NS_DEVICE},
