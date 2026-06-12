@@ -45,22 +45,6 @@ _StackSize:
 	.quad UEFI_SIZE
 
 _Start:
-	/* ---- DEFINITIVE DIAGNOSTIC (framebuffer-independent): force a hardware
-	   reboot via the PSHOLD register (0x0440B000) as the very first action.
-	   If the device enters a reboot loop, the ABL DID launch our kernel and
-	   the silent-boot problem is downstream (UEFI/framebuffer). If it stays
-	   frozen on the Samsung splash, our code never runs = a boot.img/ABL
-	   handoff problem. MMU is off here, so this is a direct physical write. */
-	movz	x10, #0xB000
-	movk	x10, #0x0440, lsl #16     /* x10 = 0x0440B000 (PSHOLD) */
-	str	wzr, [x10]                /* write 0 -> PMIC reset */
-	dsb	sy
-	isb
-_RebootWait:
-	wfi
-	b	_RebootWait
-	/* ---- end diagnostic (original relocation below, now unreachable) ---- */
-
 	mov	x4, x1
 	ldr	x5, _StackBase
 	cmp	x4, x5
