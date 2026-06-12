@@ -382,5 +382,77 @@ wall actually is.
 
 ---
 
+---
+
+## 11. Samsung Verified Boot — the AVB chain (the second wall)
+
+On a Samsung Snapdragon device the ABL **cryptographically verifies the boot image
+even while the bootloader is unlocked**. Proven decisively: flashing the *genuine*
+recovery kernel with **16 bytes changed at its entry** got rejected (stayed on the
+splash). So nothing you put in `boot` runs unless it satisfies AVB. What we learned,
+all from on-device dumps (`recovery`, `vbmeta` p11, `vbmeta_samsung` p19):
+
+- **Two vbmeta partitions.** `vbmeta` (AOSP) had flags `0x3`
+  (HASHTREE_DISABLED|VERIFICATION_DISABLED) — but Samsung's ABL does **not** honour
+  the disable flag for `boot`/`recovery`; it still verifies them. `vbmeta_samsung`
+  (flags `0x0`) covers `system`/`vendor`/`product` only.
+- **The trust key is the AOSP test key.** The `vbmeta` partition and the recovery's
+  embedded vbmeta share one AVB public key, sha1
+  `2597c218aae470a130f61162feaae70afd97f011` — which is exactly
+  `external/avb/test/data/testkey_rsa4096.pem` (unofficial LineageOS signs with it).
+  So you *can* re-sign. Confirm by comparing
+  `avbtool extract_public_key` sha1 against the pubkey pulled from the device vbmeta.
+- **A bare or self-key-signed footer is not enough.** Hash-only (Algorithm NONE) and
+  a footer signed with a freshly-generated key were both rejected; only the AOSP test
+  key is trusted.
+- **`vbmeta` is hardware write-protected.** `dd` from recovery silently no-ops (the
+  eMMC rejects it; `ro` is 0 but the write doesn't stick). You must flash it from
+  **download mode** (Odin / heimdall / Thor). On Windows: Thor 1.1.0 has no USB
+  backend, Heimdall has no easy binary — **Odin** (uses the stock Samsung USB driver)
+  was the practical tool. Pack a single image as a `ustar` tar (`vbmeta.img` inside)
+  and flash it in the **AP** slot.
+
+The recipe to make a custom `boot` pass AVB:
+```bash
+# sign boot's own footer with the device's trusted key, sized to the partition
+avbtool add_hash_footer --image boot.img --partition_name boot \
+  --partition_size <boot_bytes> --rollback_index 1 \
+  --algorithm SHA256_RSA4096 --key testkey_rsa4096.pem
+# regenerate vbmeta with OUR boot descriptor, same key
+avbtool make_vbmeta_image --output vbmeta.img \
+  --include_descriptors_from_image boot.img \
+  --algorithm SHA256_RSA4096 --key testkey_rsa4096.pem \
+  --rollback_index 1 --flags 2 --padding_size <vbmeta_bytes>
+# then in download mode: Odin AP <- vbmeta.tar (and boot.tar)
+```
+
+## 12. The serial wall — where blind bring-up ends
+
+After satisfying AVB (custom test-key vbmeta flashed via Odin, test-key boot footer)
+the device **still sits on the Samsung splash**, including with a DEBUG
+`FrameBufferSerialPortLib` build that should paint the EDK2 log onto the panel.
+
+The honest conclusion: **the on-device visual diagnostics cannot resolve this.**
+- The PSHOLD reboot probe is inconclusive — if PSHOLD only powers off (PMIC PON
+  config) or the write is a no-op, a *running* BootShim that then hangs looks
+  identical to one that never ran.
+- The framebuffer paint / DEBUG console is inconclusive — if the real scanout isn't
+  at `PcdMipiFrameBufferAddress` (0x5C000000) at our execution point, a running UEFI
+  paints into nowhere.
+
+So either the ABL still rejects the image for a reason we can't see, or PrePi faults
+before the framebuffer console comes up. **Both need a real serial console to go
+further** — there is no more signal to extract blind. On this SoC:
+- **UART**: `ttyMSM0` @ `0x4a90000` (from the stock kernel cmdline
+  `earlycon=msm_geni_serial,0x4a90000`). Build with `./build.sh --uart`.
+- **EUD** (Embedded USB Debugger): `eud_base` @ `0x01610000` in `/proc/iomem` —
+  exposes that UART over the USB-C port. Host tooling: `github.com/quic/eud`.
+- Or solder to the UART test points.
+
+That is the next step for anyone continuing this: get the UART, read PrePi, and the
+remaining bring-up becomes sighted instead of blind.
+
+---
+
 *Generated as part of the gta4l (SM6115 Bengal) port. Reproduce freely; the method
 generalises to any Qualcomm device edk2-msm can be coaxed onto.*
