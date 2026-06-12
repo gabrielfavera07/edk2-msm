@@ -8,15 +8,16 @@ _Head:
 	/* Fake Linux kernel header */
 
 _StackBase0: //has to be 0 on some devices
-	/* Text Offset */
-	.quad 0
+	/* Text Offset - match the stock/LineageOS kernel (loads at dram_base + 0x80000) */
+	.quad 0x80000
 
 _StackSize0:
-	/* Image Size */
-	.quad 0
+	/* Image Size - MUST be non-zero or the Samsung Bengal ABL never loads/
+	   launches the kernel. 8 MiB comfortably covers BootShim + 7 MiB UEFI FD. */
+	.quad 0x800000
 
-	/* Flags */
-	.quad 0
+	/* Flags - bit0 LE, bit3 2MB-aligned placement (matches stock kernel = 0xa) */
+	.quad 0xa
 
 	/* Reserved */
 	.quad 0
