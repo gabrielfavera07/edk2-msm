@@ -41,12 +41,13 @@ DefinitionBlock ("", "SSDT", 2, "QCOMM ", "SDHCMSM ", 0x00000002)
                         )
                     Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, )
                     {
-                        0x0000017C,         // hc_irq:  GIC SPI 348 + 32
+                        0x0000017C,         // hc_irq: GIC SPI 348 + 32 (only IRQ wired)
                     }
-                    Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive, ,, )
-                    {
-                        0x00000180,         // pwr_irq: GIC SPI 352 + 32 (CORE_PWRCTL)
-                    }
+                    // NOTE: pwr_irq (SPI 352) is intentionally NOT declared. Like the
+                    // Lumia 950 storage device (1 IRQ), the CORE_PWRCTL handshake is
+                    // serviced by polling in sdhcmsm.sys (SdhcMsmAckPwrIrq), so the
+                    // power IRQ stays GIC-unconnected (no ISR, no storm). The mask is
+                    // still enabled in the driver so PWRCTL_STATUS latches the request.
                 })
                 Return (RBUF) /* \_SB_.SDC0._CRS.RBUF */
             }
