@@ -78,6 +78,8 @@ DefinitionBlock ("", "DSDT", 2, "QCOMM ", "SM6225 ", 0x00000003)
             }
         }
 
+        Include("sdhc.dsl")
+
         Include("abd.dsl")
 
         Include("pmic_core.dsl")

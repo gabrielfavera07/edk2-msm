@@ -41,6 +41,14 @@ jobs:
             build-essential uuid-dev clang llvm iasl nasm gcc-aarch64-linux-gnu abootimg \
             python3-pil python3-git gettext libgcc-s1:i386 libstdc++6:i386 -y
 
+      # Recompile the gta4l DSDT (DSDT.dsl + includes, incl. sdhc.dsl SDC0 eMMC
+      # storage device for WoA) -> DSDT.aml, which the fdf embeds as SECTION RAW.
+      - name: Compile gta4l DSDT (storage SDC0 + platform)
+        run: |
+          cd Platform/Samsung/sm6225/AcpiTables/gta4l
+          iasl -ve DSDT.dsl
+          ls -la DSDT.aml
+
       # DEBUG WITHOUT --uart: SerialPortLib = FrameBufferSerialPortLib, so the
       # entire UEFI boot log renders ON THE TABLET SCREEN (no EUD/serial needed).
       - name: Build gta4l (DEBUG, on-screen console, installer zip)
