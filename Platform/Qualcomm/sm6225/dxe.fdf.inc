@@ -17,7 +17,7 @@
   INF  Platform/EFI_Binaries/Drivers/sm6225/HALIOMMUDxe/HALIOMMUDxe.inf
   INF  Platform/EFI_Binaries/Drivers/sm6225/HWIODxe/HWIODxe.inf
   INF  Platform/EFI_Binaries/Drivers/sm6225/GpiDxe/GpiDxe.inf
-  INF  Platform/EFI_Binaries/Drivers/sm6225/I2CDxe/I2CDxe.inf
+#  INF  Platform/EFI_Binaries/Drivers/sm6225/I2CDxe/I2CDxe.inf  # gta4l: Khaje binary hangs on Bengal I2C/QUP - disabled to reach Shell
   INF  Platform/EFI_Binaries/Drivers/sm6225/SPMIDxe/SPMIDxe.inf
   INF  Platform/EFI_Binaries/Drivers/sm6225/SdccDxe/SdccDxe.inf
   INF  Platform/EFI_Binaries/Drivers/sm6225/UFSDxe/UFSDxe.inf

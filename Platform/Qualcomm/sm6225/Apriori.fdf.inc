@@ -64,7 +64,7 @@ APRIORI DXE {
 
   INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 
-  INF  Platform/EFI_Binaries/Drivers/sm6225/I2CDxe/I2CDxe.inf
+#  INF  Platform/EFI_Binaries/Drivers/sm6225/I2CDxe/I2CDxe.inf  # gta4l: hangs on Bengal - disabled
   INF  Platform/EFI_Binaries/Drivers/sm6225/AdcDxe/AdcDxe.inf
   INF  Platform/EFI_Binaries/Drivers/sm6225/UsbPwrCtrlDxe/UsbPwrCtrlDxe.inf
   INF  Platform/EFI_Binaries/Drivers/sm6225/QcomChargerDxe/QcomChargerDxeLA.inf
