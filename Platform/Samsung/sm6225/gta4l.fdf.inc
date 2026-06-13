@@ -11,6 +11,7 @@ FILE FREEFORM = 7E374E25-8E01-4FEE-87F2-390C23C606CD {
   SECTION RAW = Silicon/Qualcomm/sm6225/AcpiTables/MADT.aml
   SECTION RAW = Silicon/Qualcomm/sm6225/AcpiTables/FADT.aml
   SECTION RAW = Silicon/Qualcomm/sm6225/AcpiTables/GTDT.aml
+  SECTION RAW = Platform/Samsung/sm6225/AcpiTables/gta4l/SSDT-sdhc.aml
   SECTION UI = "AcpiTables"
 }
 
