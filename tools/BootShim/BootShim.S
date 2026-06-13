@@ -1,61 +1,72 @@
-/* BootShim — DIAGNÓSTICO PSHOLD (descarta a ambiguidade display-off)
- * 1ª instrução: pinta vermelho (se display ligado) + reseta o SoC via PSHOLD.
- *   código RODA  -> BOOTLOOP (Samsung reiniciando sem parar) - independe de display
- *   splash estático -> código NÃO roda (ABL não lança nosso kernel)
- * NÃO segue pro boot normal de propósito (queremos o sinal de reset).
- * Recuperar: segure Power+VolUp no boot -> recovery (ABL lê as teclas antes do kernel).
- */
-
 _Head:
+	/* Set _Entry address */
 	adr	x1, _Payload
+
+	/* Jump to the real code */
 	b	_Start
 
-	/* Fake Linux kernel header (byte-idêntico ao de produção) */
-_StackBase0:
+	/* Fake Linux kernel header */
+
+_StackBase0: //has to be 0 on some devices
+	/* Text Offset - match the stock/LineageOS kernel (loads at dram_base + 0x80000) */
 	.quad 0x80000
+
 _StackSize0:
+	/* Image Size - MUST be non-zero or the Samsung Bengal ABL never loads/
+	   launches the kernel. 8 MiB comfortably covers BootShim + 7 MiB UEFI FD. */
 	.quad 0x800000
+
+	/* Flags - bit0 LE, bit3 2MB-aligned placement (matches stock kernel = 0xa) */
 	.quad 0xa
+
+	/* Reserved */
 	.quad 0
+
+	/* Reserved */
 	.quad 0
+
+	/* Reserved */
 	.quad 0
+
+	/* ARM64 Magic */
 	.ascii "ARM\x64"
+
+	/* Reserved */
 	.long 0
+
 	.ascii "EDK2-MSM"
 
 _StackBase:
+	/* Text Offset */
 	.quad UEFI_BASE
+
 _StackSize:
+	/* Image Size */
 	.quad UEFI_SIZE
 
 _Start:
-	/* ----- pinta vermelho cont_splash 0x5c000000 (caso display ON) ----- */
-	movz	x10, #0x5c00, lsl #16      /* 0x5c000000 */
-	movz	x12, #0x00A0, lsl #16      /* 10 MiB */
-	add	x11, x10, x12
-	movz	w8, #0
-	movk	w8, #0xFFFF, lsl #16       /* 0xFFFF0000 vermelho */
-_pl:
-	str	w8, [x10], #4
-	cmp	x10, x11
-	b.lo	_pl
+	mov	x4, x1
+	ldr	x5, _StackBase
+	cmp	x4, x5
+	beq	_Entry
+	ldr	x6,	_StackSize
 
-	/* ----- marcador em IMEM 0x0c1250c8 (best effort) ----- */
-	movz	x14, #0x0c12, lsl #16
-	movk	x14, #0x50c8
-	movz	w13, #0xBEEF
-	movk	w13, #0xDEAD, lsl #16
-	str	w13, [x14]
+_CopyLoop:
+	ldp	x2, x3, [x4], #16
+	stp	x2, x3, [x5], #16
+	subs	x6, x6, #16
+	b.ne	_CopyLoop
+	ldr	x5, _StackBase
 
-	/* ----- RESET via PSHOLD 0x0440b000 -> bootloop se o código roda ----- */
-	movz	x10, #0x0440, lsl #16
-	movk	x10, #0xb000              /* 0x0440b000 */
-	str	wzr, [x10]
+_Entry:
+	br	x5
 
-	/* se não resetou: loop morto (NÃO segue boot) */
-_dead:
-	b	_dead
+_Dead:
+	/* We should never get here */
+	b	_Dead
 
 .text
 .align 4
+
 _Payload:
+	/* Your code will get ran right after this binary */
