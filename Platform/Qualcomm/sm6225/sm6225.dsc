@@ -42,7 +42,7 @@
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|44
 
   gQcomTokenSpaceGuid.PcdUefiMemPoolBase|0x63900000         # DXE Heap base address
-  gQcomTokenSpaceGuid.PcdUefiMemPoolSize|0x0E000000         # UefiMemorySize, DXE heap size
+  gQcomTokenSpaceGuid.PcdUefiMemPoolSize|0x0D800000         # UefiMemorySize, DXE heap size (must END at 0x71100000, before Samsung SS PLOG reserved @0x71100000 - else DXE stack lands in reserved mem and DxeCore hangs)
   gQcomTokenSpaceGuid.PcdMipiFrameBufferAddress|0x5C000000
 
   gArmPlatformTokenSpaceGuid.PcdCoreCount|8
