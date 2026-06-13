@@ -32,6 +32,7 @@ function platform_build_bootimg(){
 		--kernel "${WORKSPACE}/uefi-${DEVICE}-kernel" \
 		--ramdisk ramdisk \
 		--dtb "${ROOTDIR}/Platform/Samsung/sm6225/FdtBlob_compat/gta4l.dtb" \
+		--cmdline "console=ttyMSM0,115200n8 earlycon=msm_geni_serial,0x4a90000 androidboot.console=ttyMSM0 androidboot.hardware=qcom" \
 		--board "SRPTC24A006" \
 		--base 0x00000000 \
 		--kernel_offset 0x00008000 \
