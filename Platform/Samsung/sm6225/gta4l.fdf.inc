@@ -12,13 +12,14 @@ INF Platform/Samsung/sm6225/Drivers/UsbDeviceModeDxe/UsbDeviceModeDxe.inf
 INF Platform/Samsung/sm6225/Drivers/EbsProbeDxe/EbsProbeDxe.inf
 
 // ACPI Tables - the Windows-on-ARM hardware description for the SoC.
-// DSDT adapted from the proven fog (sm6225) port; MADT/FADT/GTDT are the
-// shared sm6225 SoC tables. This is what Windows reads to find the hardware.
+// MADT/FADT/GTDT are the Kamorta (SM6115) tables from Project-Silicium, which
+// are tuned for the Windows kernel handoff (the shared sm6225 ones were
+// incomplete and the kernel died pre-KdInitSystem). DSDT kept from fog.
 FILE FREEFORM = 7E374E25-8E01-4FEE-87F2-390C23C606CD {
   SECTION RAW = Platform/Samsung/sm6225/AcpiTables/gta4l/DSDT.aml
-  SECTION RAW = Silicon/Qualcomm/sm6225/AcpiTables/MADT.aml
-  SECTION RAW = Silicon/Qualcomm/sm6225/AcpiTables/FADT.aml
-  SECTION RAW = Silicon/Qualcomm/sm6225/AcpiTables/GTDT.aml
+  SECTION RAW = Platform/Samsung/sm6225/AcpiTables/gta4l/MADT-kamorta.aml
+  SECTION RAW = Platform/Samsung/sm6225/AcpiTables/gta4l/FADT-kamorta.aml
+  SECTION RAW = Platform/Samsung/sm6225/AcpiTables/gta4l/GTDT-kamorta.aml
   SECTION RAW = Platform/Samsung/sm6225/AcpiTables/gta4l/SSDT-sdhc.aml
   SECTION RAW = Platform/Samsung/sm6225/AcpiTables/gta4l/DBG2.aml
   SECTION UI = "AcpiTables"
