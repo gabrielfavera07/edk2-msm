@@ -25,6 +25,9 @@
   DebugLib
   BaseLib
 
+[Protocols]
+  gEfiGraphicsOutputProtocolGuid        ## CONSUMES
+
 [Guids]
   gEfiEventVirtualAddressChangeGuid     ## CONSUMES ## Event
 
