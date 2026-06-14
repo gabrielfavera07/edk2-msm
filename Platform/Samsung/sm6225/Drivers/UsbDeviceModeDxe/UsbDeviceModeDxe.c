@@ -261,8 +261,29 @@ OnReadyToBoot (
   Qusb2HsPhyInit ();
   Dwc3DeviceMode ();
 
-  DEBUG ((DEBUG_INFO, "[usbdev] done. GCTL=0x%08x GUSB2PHYCFG=0x%08x DCTL=0x%08x\n",
-          MmioRead32 (DWC3_GCTL), MmioRead32 (DWC3_GUSB2PHYCFG0), MmioRead32 (DWC3_DCTL)));
+  //
+  // ---- DIAGNOSTIC readout (so we can see on-screen if the bring-up worked) ----
+  //
+  {
+  UINT32 pll  = MmioRead32 (QUSB2_PLL_STATUS);
+  UINT32 gctl = MmioRead32 (DWC3_GCTL);
+  UINTN  s;
+
+  DEBUG ((DEBUG_ERROR, "\n[usbdev] ===== DIAG =====\n"));
+  DEBUG ((DEBUG_ERROR, "[usbdev] GDSC(A004)=0x%08x PWRON=%d | masterCBCR(A010)=0x%08x OFF=%d | mockCBCR(A018)=0x%08x OFF=%d\n",
+          MmioRead32 (GCC_USB30_PRIM_GDSCR), (MmioRead32 (GCC_USB30_PRIM_GDSCR) & GDSC_PWR_ON) ? 1 : 0,
+          MmioRead32 (GCC_BASE + 0x1A010), (MmioRead32 (GCC_BASE + 0x1A010) & BIT31) ? 1 : 0,
+          MmioRead32 (GCC_BASE + 0x1A018), (MmioRead32 (GCC_BASE + 0x1A018) & BIT31) ? 1 : 0));
+  DEBUG ((DEBUG_ERROR, "[usbdev] QUSB2 PLL_STATUS(1613038)=0x%08x  PLL_LOCKED=%d  (POWERDOWN=0x%08x)\n",
+          pll, (pll & QUSB2_PLL_LOCKED) ? 1 : 0, MmioRead32 (QUSB2_POWERDOWN)));
+  DEBUG ((DEBUG_ERROR, "[usbdev] GCTL=0x%08x PrtCapDir=%d (2=dev) | GUSB2PHYCFG=0x%08x | DCTL=0x%08x | GUSB3PIPE=0x%08x\n",
+          gctl, (gctl >> 12) & 3, MmioRead32 (DWC3_GUSB2PHYCFG0),
+          MmioRead32 (DWC3_DCTL), MmioRead32 (DWC3_GUSB3PIPECTL0)));
+  DEBUG ((DEBUG_ERROR, "[usbdev] ===== pausa 18s: FOTOGRAFE AGORA =====\n"));
+  for (s = 0; s < 18; s++) {
+    gBS->Stall (1000000);
+  }
+  }
 }
 
 EFI_STATUS
