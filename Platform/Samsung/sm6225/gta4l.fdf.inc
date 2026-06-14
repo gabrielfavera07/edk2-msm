@@ -3,6 +3,10 @@
 // Buttons (power / volume via PMIC GPIO) - prebuilt sm6225 DXE
 INF Platform/EFI_Binaries/Drivers/sm6225/ButtonsDxe/ButtonsDxe.inf
 
+// dwc3 USB device-mode bring-up (HS) so Windows KDNET-EEM finds a live controller.
+// (The Khaje Usbfn prebuilts hang on Bengal; this is a minimal from-source bring-up.)
+INF Platform/Samsung/sm6225/Drivers/UsbDeviceModeDxe/UsbDeviceModeDxe.inf
+
 // ACPI Tables - the Windows-on-ARM hardware description for the SoC.
 // DSDT adapted from the proven fog (sm6225) port; MADT/FADT/GTDT are the
 // shared sm6225 SoC tables. This is what Windows reads to find the hardware.

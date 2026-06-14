@@ -21,6 +21,10 @@
 [LibraryClasses.common]
   PlatformMemoryMapLib|Platform/Samsung/sm6225/Library/gta4l/PlatformMemoryMapLib/PlatformMemoryMapLib.inf
 
+[Components.common]
+  # dwc3 USB device-mode bring-up (HS) for Windows KDNET-EEM observability
+  Platform/Samsung/sm6225/Drivers/UsbDeviceModeDxe/UsbDeviceModeDxe.inf
+
 [BuildOptions.common]
   GCC:*_*_AARCH64_CC_FLAGS = -DENABLE_SIMPLE_INIT
 
