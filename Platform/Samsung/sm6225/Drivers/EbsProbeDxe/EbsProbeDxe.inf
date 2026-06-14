@@ -30,6 +30,7 @@
 
 [Guids]
   gEfiEventVirtualAddressChangeGuid     ## CONSUMES ## Event
+  gEfiEventReadyToBootGuid              ## CONSUMES ## Event
 
 [Depex]
   TRUE
