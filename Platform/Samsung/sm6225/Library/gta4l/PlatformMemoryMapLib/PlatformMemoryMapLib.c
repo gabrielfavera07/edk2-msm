@@ -1,11 +1,9 @@
 #include <Library/BaseLib.h>
 #include <Library/PlatformMemoryMapLib.h>
 
-// XBL-correct memory map ported from Project-Silicium Mu-Silicium gta4l (the
-// V6lhost-validated SM-T500 layout, identical to the XBL uefiplat-smt500.cfg).
-// Reserved carve-outs match the firmware exactly so the Windows kernel does not
-// touch a firmware region at handoff. Our 7 MB UEFI FD stays at 0x58000000
-// (the XBL's 3 MB slot at 0x5FC00000 is too small for our prebuilt-heavy FD).
+// XBL-correct memory map (Mu-Silicium gta4l = uefiplat-smt500.cfg) + our 7 MB FD
+// at 0x58000000 + the device-specific secure "Removed Region" 0x60000000 kept
+// (the UEFI faults if it maps that as RAM). Reserved carve-outs match firmware.
 static ARM_MEMORY_REGION_DESCRIPTOR_EX gDeviceMemoryDescriptorEx[] = {
   {"Kernel",            0x40000000, 0x05700000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
   {"HYP",               0x45700000, 0x00600000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
@@ -32,7 +30,8 @@ static ARM_MEMORY_REGION_DESCRIPTOR_EX gDeviceMemoryDescriptorEx[] = {
   {"RAM Partition",     0x5FFD0000, 0x00027000, AddMem, SYS_MEM, SYS_MEM_CAP,   Conv, WRITE_BACK_XN},
   {"Log Buffer",        0x5FFF7000, 0x00008000, AddMem, SYS_MEM, SYS_MEM_CAP, RtData, WRITE_BACK_XN},
   {"Info Blk",          0x5FFFF000, 0x00001000, AddMem, SYS_MEM, SYS_MEM_CAP, RtData, WRITE_BACK_XN},
-  {"RAM Partition",     0x60000000, 0x08000000, AddMem, SYS_MEM, SYS_MEM_CAP,   Conv, WRITE_BACK_XN},
+  {"Removed Region",    0x60000000, 0x03900000, AddMem, MEM_RES, WRITE_COMBINEABLE, Reserv, UNCACHED_UNBUFFERED_XN},
+  {"RAM Partition",     0x63900000, 0x04700000, AddMem, SYS_MEM, SYS_MEM_CAP,   Conv, WRITE_BACK_XN},
   {"WtShareMem",        0x68000000, 0x00100000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_THROUGH_XN},
   {"RAM Partition",     0x68100000, 0x09300000, AddMem, SYS_MEM, SYS_MEM_CAP,   Conv, WRITE_BACK_XN},
   {"SEC Debug",         0x71400000, 0x00900000, AddMem, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
