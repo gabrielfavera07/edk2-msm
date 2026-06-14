@@ -7,6 +7,10 @@ INF Platform/EFI_Binaries/Drivers/sm6225/ButtonsDxe/ButtonsDxe.inf
 // (The Khaje Usbfn prebuilts hang on Bengal; this is a minimal from-source bring-up.)
 INF Platform/Samsung/sm6225/Drivers/UsbDeviceModeDxe/UsbDeviceModeDxe.inf
 
+// Post-ExitBootServices probe: paints the screen green at the kernel's first
+// runtime call (SetVirtualAddressMap) to see how far past EBS the kernel gets.
+INF Platform/Samsung/sm6225/Drivers/EbsProbeDxe/EbsProbeDxe.inf
+
 // ACPI Tables - the Windows-on-ARM hardware description for the SoC.
 // DSDT adapted from the proven fog (sm6225) port; MADT/FADT/GTDT are the
 // shared sm6225 SoC tables. This is what Windows reads to find the hardware.

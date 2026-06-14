@@ -24,6 +24,8 @@
 [Components.common]
   # dwc3 USB device-mode bring-up (HS) for Windows KDNET-EEM observability
   Platform/Samsung/sm6225/Drivers/UsbDeviceModeDxe/UsbDeviceModeDxe.inf
+  # post-ExitBootServices probe (paints screen at the kernel's first runtime call)
+  Platform/Samsung/sm6225/Drivers/EbsProbeDxe/EbsProbeDxe.inf
 
 [BuildOptions.common]
   GCC:*_*_AARCH64_CC_FLAGS = -DENABLE_SIMPLE_INIT
