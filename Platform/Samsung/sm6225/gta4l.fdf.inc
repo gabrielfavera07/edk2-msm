@@ -7,9 +7,12 @@ INF Platform/EFI_Binaries/Drivers/sm6225/ButtonsDxe/ButtonsDxe.inf
 // (The Khaje Usbfn prebuilts hang on Bengal; this is a minimal from-source bring-up.)
 INF Platform/Samsung/sm6225/Drivers/UsbDeviceModeDxe/UsbDeviceModeDxe.inf
 
-// Post-ExitBootServices probe: paints the screen green at the kernel's first
-// runtime call (SetVirtualAddressMap) to see how far past EBS the kernel gets.
-INF Platform/Samsung/sm6225/Drivers/EbsProbeDxe/EbsProbeDxe.inf
+// Post-ExitBootServices probe: hooks runtime services and writes the framebuffer
+// (phys 0x5C000000) from the kernel's GetVariable call -- but that page is NOT
+// mapped in the kernel's address space, so the write FAULTS and crashes the
+// kernel right at GetVariable (white block stuck at 1/4). DISABLED to test if the
+// kernel actually boots without our probe in the way.
+// INF Platform/Samsung/sm6225/Drivers/EbsProbeDxe/EbsProbeDxe.inf
 
 // ACPI Tables - the Windows-on-ARM hardware description for the SoC.
 // MADT/FADT/GTDT are the Kamorta (SM6115) tables from Project-Silicium, which
