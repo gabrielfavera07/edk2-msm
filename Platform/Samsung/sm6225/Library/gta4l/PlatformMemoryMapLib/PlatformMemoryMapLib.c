@@ -43,9 +43,15 @@ static ARM_MEMORY_REGION_DESCRIPTOR_EX gDeviceMemoryDescriptorEx[] = {
   {"CPU Vectors",           0x5FF8C000, 0x00001000, AddMem, SYS_MEM, SYS_MEM_CAP, BsData, WRITE_BACK},
   {"MMU PageTables",        0x5FF8D000, 0x00003000, AddMem, SYS_MEM, SYS_MEM_CAP, BsData, WRITE_BACK_XN},
   {"UEFI Stack",            0x5FF90000, 0x00040000, AddMem, SYS_MEM, SYS_MEM_CAP, BsData, WRITE_BACK_XN},
-  {"RAM Partition",         0x5FFD0000, 0x00027000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
-  {"Log Buffer",            0x5FFF7000, 0x00008000, AddMem, SYS_MEM, SYS_MEM_CAP, RtData, WRITE_BACK_XN},
-  {"Info Blk",              0x5FFFF000, 0x00001000, AddMem, SYS_MEM, SYS_MEM_CAP, RtData, WRITE_BACK_XN},
+  {"RAM Partition",         0x5FFD0000, 0x00020000, AddMem, SYS_MEM, SYS_MEM_CAP, Conv,   WRITE_BACK_XN},
+  /* *** THE HANDOFF FIX *** Windows ARM64 requires EVERY runtime (RtData/RtCode)
+     entry to be 64 KB-aligned in BOTH base and size. The old Log Buffer
+     (0x5FFF7000) + Info Blk (0x5FFFF000) were 4 KB-aligned, so winload aborts at
+     ExitBootServices: "A RUNTIME memory entry is not on a proper alignment"
+     (Fatal 0x1, STATUS_INVALID_PARAMETER) and the kernel never starts. Merge them
+     into one 64 KB-aligned runtime block 0x5FFF0000..0x60000000. The actual log/info
+     buffers (0x5FFF7000 / 0x5FFFF000) still live inside it, still runtime. */
+  {"UEFI Runtime Blk",      0x5FFF0000, 0x00010000, AddMem, SYS_MEM, SYS_MEM_CAP, RtData, WRITE_BACK_XN},
   /* removed_region@60000000 - secure no-map hole, do NOT use as RAM */
   {"Removed Region",        0x60000000, 0x03900000, AddMem, MEM_RES, WRITE_COMBINEABLE,   Reserv, UNCACHED_UNBUFFERED_XN},
   /* DXE heap sized to stop exactly at Samsung ss_plog@71100000 */
